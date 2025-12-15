@@ -36,6 +36,12 @@ if (!$producto) {
     <?php echo $producto['precio']; ?> €
 </p>
 
+<form method="post" action="add_to_cart.php">
+    <input type="hidden" name="id_producto" value="<?php echo $producto['id_producto']; ?>">
+    <button type="submit">Añadir al carrito</button>
+</form>
+
+
 <?php if (!empty($producto['imagen_url'])): ?>
     <img 
         src="../assets/img/<?php echo $producto['imagen_url']; ?>" 
