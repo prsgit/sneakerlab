@@ -46,8 +46,12 @@ $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <td><?php echo $producto['stock']; ?></td>
             <td><?php echo $producto['imagen_url']; ?></td>
             <td>
-                <!-- Luego pondremos editar/eliminar -->
-                (pendiente)
+                <a href="producto_editar.php?id=<?php echo $producto['id_producto']; ?>">Editar</a>
+                |
+                <a href="producto_eliminar.php?id=<?php echo $producto['id_producto']; ?>"
+                    onclick="return confirm('¿Seguro que quieres eliminar este producto?');">
+                    Eliminar
+                </a>
             </td>
         </tr>
     <?php endforeach; ?>

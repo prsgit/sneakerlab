@@ -2,7 +2,6 @@
 session_start();
 
 /*
-  Protección mínima del área admin.
   Si no hay sesión de admin activa, mandamos a login.
 */
 if (empty($_SESSION['admin'])) {
