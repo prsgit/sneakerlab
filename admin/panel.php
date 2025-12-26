@@ -23,6 +23,7 @@ if (empty($_SESSION['admin'])) {
 
 <ul>
     <li><a href="productos.php">Gestionar productos</a></li>
+    <li><a href="usuarios.php">Gestionar usuarios</a></li>
     <li><a href="logout.php">Cerrar sesión</a></li>
 </ul>
 
