@@ -1,26 +1,48 @@
 <?php
 session_start();
-
-/*
-  Login mínimo para no bloquear el desarrollo.
-  Luego lo conectaremos con la tabla usuario (RF01),
-  pero para RF02 necesitamos una puerta de entrada ya.
-*/
+require_once "../config/db.php";
 
 $error = "";
 
+/* Si ya está logueado como admin, al panel */
+if (!empty($_SESSION["admin"]) && !empty($_SESSION["id_usuario"])) {
+    header("Location: panel.php");
+    exit;
+}
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
-    $usuario = $_POST["usuario"] ?? "";
+    $email = $_POST["email"] ?? "";
     $password = $_POST["password"] ?? "";
 
-    // Credenciales temporales (solo para desarrollo)
-    if ($usuario === "admin" && $password === "admin123") {
-        $_SESSION["admin"] = true;
-        header("Location: panel.php");
-        exit;
+    if ($email === "" || $password === "") {
+        $error = "Completa todos los campos.";
     } else {
-        $error = "Credenciales incorrectas.";
+
+        /* Buscar usuario por email y rol admin */
+        $stmt = $pdo->prepare("SELECT id_usuario, nombre, email, contrasena, rol FROM usuario WHERE email = ? AND rol = 'admin' LIMIT 1");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$user) {
+            $error = "Credenciales incorrectas.";
+        } else {
+
+            /* Verificar contraseña (hash) */
+            if (!password_verify($password, $user["contrasena"])) {
+                $error = "Credenciales incorrectas.";
+            } else {
+
+                /* Login correcto */
+                $_SESSION["admin"] = true;
+                $_SESSION["id_usuario"] = $user["id_usuario"];
+                $_SESSION["rol"] = $user["rol"];
+                $_SESSION["nombre"] = $user["nombre"];
+
+                header("Location: panel.php");
+                exit;
+            }
+        }
     }
 }
 ?>
@@ -36,12 +58,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <h1>Login Admin</h1>
 
 <?php if ($error): ?>
-    <p style="color:red;"><?php echo $error; ?></p>
+    <p style="color:red;"><?php echo htmlspecialchars($error); ?></p>
 <?php endif; ?>
 
 <form method="post">
-    <label>Usuario:</label><br>
-    <input type="text" name="usuario" required><br><br>
+    <label>Email:</label><br>
+    <input type="email" name="email" required><br><br>
 
     <label>Contraseña:</label><br>
     <input type="password" name="password" required><br><br>

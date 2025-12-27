@@ -61,8 +61,12 @@ $usuarios = $usuariosStmt->fetchAll(PDO::FETCH_ASSOC);
                 <td><?php echo htmlspecialchars((string)($u[$col] ?? "")); ?></td>
             <?php endforeach; ?>
             <td>
-                <!-- Luego pondremos editar/eliminar -->
-                (pendiente)
+               <a href="usuario_editar.php?id=<?php echo $u['id_usuario']; ?>">Editar</a>
+                |
+                <a href="usuario_eliminar.php?id=<?php echo $u['id_usuario']; ?>"
+                 onclick="return confirm('¿Seguro que quieres eliminar este usuario?');">
+                Eliminar
+                 </a>
             </td>
         </tr>
     <?php endforeach; ?>
