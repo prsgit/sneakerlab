@@ -1,5 +1,11 @@
 <?php
+session_start();
 require_once "../config/db.php";
+
+if (empty($_SESSION["cliente"]) || empty($_SESSION["id_usuario"])) {
+    header("Location: login.php");
+    exit;
+}
 
 if (!isset($_GET['id'])) {
     echo "Producto no válido";
@@ -26,6 +32,19 @@ if (!$producto) {
     <title><?php echo $producto['nombre']; ?></title>
 </head>
 <body>
+
+<nav style="margin-bottom:20px; padding:10px; border-bottom:1px solid #ccc;">
+    <strong>Bienvenido<?php echo isset($_SESSION['nombre']) ? ', ' . htmlspecialchars($_SESSION['nombre']) : ''; ?></strong>
+    |
+    <a href="catalogo.php">Catálogo</a>
+    |
+    <a href="carrito.php">Carrito</a>
+    |
+    <a href="mis_pedidos.php">Mis pedidos</a>
+    |
+    <a href="logout.php">Cerrar sesión</a>
+</nav>
+
 
 <h1><?php echo $producto['nombre']; ?></h1>
 

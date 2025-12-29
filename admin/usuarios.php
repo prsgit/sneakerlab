@@ -29,7 +29,7 @@ foreach ($columnas as $col) {
 }
 
 /* Obtener usuarios */
-$usuariosStmt = $pdo->query("SELECT * FROM usuario ORDER BY id_usuario DESC");
+$usuariosStmt = $pdo->query("SELECT * FROM usuario WHERE activo = 1 ORDER BY id_usuario DESC");
 $usuarios = $usuariosStmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 

@@ -2,6 +2,11 @@
 session_start();
 require_once "../config/db.php";
 
+if (empty($_SESSION["cliente"]) || empty($_SESSION["id_usuario"])) {
+    header("Location: login.php");
+    exit;
+}
+
 /*Comprueba que el carrito existe y no está vacío */
 if (empty($_SESSION['carrito'])) {
     echo "El carrito está vacío. No se puede confirmar la compra.";
@@ -11,7 +16,7 @@ if (empty($_SESSION['carrito'])) {
 $carrito = $_SESSION['carrito'];
 
 
-$id_usuario = 1; // usuario temporal creado en la BD
+$id_usuario = (int)$_SESSION["id_usuario"];
 
 
 $total_pedido = 0;

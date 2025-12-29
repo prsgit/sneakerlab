@@ -4,9 +4,9 @@ require_once "../config/db.php";
 
 $error = "";
 
-/* Si ya está logueado como admin, al panel */
-if (!empty($_SESSION["admin"]) && !empty($_SESSION["id_usuario"])) {
-    header("Location: panel.php");
+/* Si ya está logueado como cliente, al catálogo */
+if (!empty($_SESSION["cliente"]) && !empty($_SESSION["id_usuario"])) {
+    header("Location: catalogo.php");
     exit;
 }
 
@@ -19,8 +19,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $error = "Completa todos los campos.";
     } else {
 
-        /* Buscar usuario por email y rol admin */
-        $stmt = $pdo->prepare("SELECT id_usuario, nombre, email, contrasena, rol FROM usuario WHERE email = ? AND rol = 'admin' LIMIT 1");
+        /* Buscar usuario por email y rol cliente */
+        $stmt = $pdo->prepare("SELECT id_usuario, nombre, email, contrasena, rol FROM usuario WHERE email = ? AND rol = 'cliente' LIMIT 1");
         $stmt->execute([$email]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -28,18 +28,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $error = "Credenciales incorrectas.";
         } else {
 
-            /* Verificar contraseña (hash) */
             if (!password_verify($password, $user["contrasena"])) {
                 $error = "Credenciales incorrectas.";
             } else {
 
                 /* Login */
-                $_SESSION["admin"] = true;
+                $_SESSION["cliente"] = true;
                 $_SESSION["id_usuario"] = $user["id_usuario"];
                 $_SESSION["rol"] = $user["rol"];
                 $_SESSION["nombre"] = $user["nombre"];
 
-                header("Location: panel.php");
+                header("Location: catalogo.php");
                 exit;
             }
         }
@@ -51,11 +50,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Login Admin</title>
+    <title>Login Cliente</title>
 </head>
 <body>
 
-<h1>Login Admin</h1>
+<h1>Login Cliente</h1>
 
 <?php if ($error): ?>
     <p style="color:red;"><?php echo htmlspecialchars($error); ?></p>
@@ -70,6 +69,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     <button type="submit">Entrar</button>
 </form>
+
+<p>¿No tienes cuenta? <a href="registro.php">Regístrate</a></p>
 
 </body>
 </html>
