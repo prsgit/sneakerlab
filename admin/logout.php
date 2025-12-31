@@ -1,5 +1,12 @@
 <?php
 session_start();
-unset($_SESSION["admin"]);
-header("Location: login.php");
+
+/* Vaciar todas las variables de sesión */
+$_SESSION = [];
+
+/* Destruir la sesión */
+session_destroy();
+
+/* Redirigir al login de cliente */
+header("Location: ../public/home.php");
 exit;

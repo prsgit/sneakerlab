@@ -14,7 +14,7 @@ if (!isset($_GET["id"])) {
     exit;
 }
 
-$id_usuario = $_GET["id"];
+$id_usuario = (int)$_GET["id"];
 
 /* Evitar que un admin se elimine a sí mismo */
 if (isset($_SESSION["id_usuario"]) && $_SESSION["id_usuario"] == $id_usuario) {
@@ -22,8 +22,8 @@ if (isset($_SESSION["id_usuario"]) && $_SESSION["id_usuario"] == $id_usuario) {
     exit;
 }
 
-/* Comprobar que el usuario existe */
-$stmt = $pdo->prepare("SELECT id_usuario FROM usuario WHERE id_usuario = ?");
+/* Comprobar que el usuario existe y está activo */
+$stmt = $pdo->prepare("SELECT id_usuario FROM usuario WHERE id_usuario = ? AND activo = 1");
 $stmt->execute([$id_usuario]);
 $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -32,8 +32,8 @@ if (!$usuario) {
     exit;
 }
 
-/* Eliminar usuario */
-$stmtDel = $pdo->prepare("DELETE FROM usuario WHERE id_usuario = ?");
+/* “Eliminar” usuario = desactivar */
+$stmtDel = $pdo->prepare("UPDATE usuario SET activo = 0 WHERE id_usuario = ?");
 $stmtDel->execute([$id_usuario]);
 
 /* Volver al listado */

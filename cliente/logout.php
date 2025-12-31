@@ -8,5 +8,5 @@ $_SESSION = [];
 session_destroy();
 
 /* Redirigir al login de cliente */
-header("Location: login.php");
+header("Location: ../public/home.php");
 exit;

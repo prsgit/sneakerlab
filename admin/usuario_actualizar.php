@@ -21,7 +21,13 @@ $email = $_POST["email"] ?? "";
 $telefono = $_POST["telefono"] ?? "";
 $direccion = $_POST["direccion"] ?? "";
 $rol = $_POST["rol"] ?? "";
-$nuevaPassword = $_POST["password"] ?? ""; // opcional
+$nuevaPassword = $_POST["contrasena"] ?? ""; // opcional
+
+/* Normalizar */
+$nombre = trim($nombre);
+$email = trim(strtolower($email));
+$telefono = trim($telefono);
+$direccion = trim($direccion);
 
 /* Validación */
 if ($id_usuario === "" || $nombre === "" || $email === "" || $rol === "") {
@@ -29,9 +35,31 @@ if ($id_usuario === "" || $nombre === "" || $email === "" || $rol === "") {
     exit;
 }
 
+/* Validar email */
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    echo "Email no válido.";
+    exit;
+}
+
 /* Validar rol permitido */
 if ($rol !== "cliente" && $rol !== "admin") {
     echo "Rol no válido.";
+    exit;
+}
+
+/* Comprobar que el usuario existe */
+$stUser = $pdo->prepare("SELECT 1 FROM usuario WHERE id_usuario = ? LIMIT 1");
+$stUser->execute([$id_usuario]);
+if (!$stUser->fetchColumn()) {
+    echo "Usuario no encontrado.";
+    exit;
+}
+
+/* Evitar email duplicado en otro usuario */
+$stDup = $pdo->prepare("SELECT 1 FROM usuario WHERE email = ? AND id_usuario <> ? LIMIT 1");
+$stDup->execute([$email, $id_usuario]);
+if ($stDup->fetchColumn()) {
+    echo "Ya existe otro usuario con ese email.";
     exit;
 }
 
@@ -42,23 +70,28 @@ if ($rol !== "cliente" && $rol !== "admin") {
     - la hasheamos y actualizamos también contraseña
 */
 
-if ($nuevaPassword === "") {
+try {
+    if ($nuevaPassword === "") {
 
-    $sql = "UPDATE usuario
-            SET nombre = ?, email = ?, telefono = ?, direccion = ?, rol = ?
-            WHERE id_usuario = ?";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$nombre, $email, $telefono, $direccion, $rol, $id_usuario]);
+        $sql = "UPDATE usuario
+                SET nombre = ?, email = ?, telefono = ?, direccion = ?, rol = ?
+                WHERE id_usuario = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$nombre, $email, $telefono, $direccion, $rol, $id_usuario]);
 
-} else {
+    } else {
 
-    $hash = password_hash($nuevaPassword, PASSWORD_DEFAULT);
+        $hash = password_hash($nuevaPassword, PASSWORD_DEFAULT);
 
-    $sql = "UPDATE usuario
-            SET nombre = ?, email = ?, telefono = ?, direccion = ?, rol = ?, contrasena = ?
-            WHERE id_usuario = ?";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$nombre, $email, $telefono, $direccion, $rol, $hash, $id_usuario]);
+        $sql = "UPDATE usuario
+                SET nombre = ?, email = ?, telefono = ?, direccion = ?, rol = ?, contrasena = ?
+                WHERE id_usuario = ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$nombre, $email, $telefono, $direccion, $rol, $hash, $id_usuario]);
+    }
+} catch (Throwable $e) {
+    echo "Error al actualizar el usuario.";
+    exit;
 }
 
 /* Volver al listado */

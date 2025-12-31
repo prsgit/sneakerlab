@@ -1,2 +1,3 @@
 # sneakerlab
-<!-- http://localhost/sneakerlab/cliente/catalogo.php -->
+<!-- http://localhost/sneakerlab/public/home.php-->
+

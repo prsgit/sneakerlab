@@ -15,9 +15,27 @@ $telefono = $_POST["telefono"] ?? "";
 $direccion = $_POST["direccion"] ?? "";
 $password = $_POST["password"] ?? "";
 
+/* Normalizar */
+$nombre = trim($nombre);
+$email = trim(strtolower($email));
+$telefono = trim($telefono);
+$direccion = trim($direccion);
+
 /* Validación */
 if ($nombre === "" || $email === "" || $password === "") {
     echo "Faltan datos obligatorios.";
+    exit;
+}
+
+/* Validar email */
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    echo "Email no válido.";
+    exit;
+}
+
+/* Validar contraseña (mínimo) */
+if (strlen($password) < 8) {
+    echo "La contraseña debe tener al menos 8 caracteres.";
     exit;
 }
 
@@ -37,7 +55,13 @@ $hash = password_hash($password, PASSWORD_DEFAULT);
 $sql = "INSERT INTO usuario (nombre, email, telefono, direccion, contrasena, rol)
         VALUES (?, ?, ?, ?, ?, 'cliente')";
 $stmt = $pdo->prepare($sql);
-$stmt->execute([$nombre, $email, $telefono, $direccion, $hash]);
+
+try {
+    $stmt->execute([$nombre, $email, $telefono, $direccion, $hash]);
+} catch (Throwable $e) {
+    echo "Error al registrar el usuario.";
+    exit;
+}
 
 /* Redirigir al login */
 header("Location: login.php");

@@ -9,11 +9,6 @@ if (empty($_SESSION["cliente"]) || empty($_SESSION["id_usuario"])) {
 
 $carrito = $_SESSION['carrito'] ?? [];
 
-/* echo "<pre>";
-print_r($_SESSION["carrito"] ?? []);
-echo "</pre>";
- */
-
 $productos = [];
 $total = 0;
 
@@ -31,73 +26,122 @@ if (!empty($carrito)) {
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Carrito de la compra</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Carrito de la compra</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Fuente -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Tema global -->
+  <link rel="stylesheet" href="../assets/css/theme.css">
 </head>
+
 <body>
+  <div class="page">
+    <div class="page-container">
 
-<nav style="margin-bottom:20px; padding:10px; border-bottom:1px solid #ccc;">
-    <strong>Bienvenido<?php echo isset($_SESSION['nombre']) ? ', ' . htmlspecialchars($_SESSION['nombre']) : ''; ?></strong>
-    |
-    <a href="catalogo.php">Catálogo</a>
-    |
-    <a href="carrito.php">Carrito</a>
-    |
-    <a href="mis_pedidos.php">Mis pedidos</a>
-    |
-    <a href="logout.php">Cerrar sesión</a>
-</nav>
+      <!-- Navbar moderno (mismo que catálogo) -->
+      <nav class="navbar navbar-expand-lg navbar-premium px-3 py-2" aria-label="Navegación principal">
+        <div class="container-fluid p-0">
 
+          <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="catalogo.php" style="color: var(--text);">
+            <span class="brand-dot"></span>
+            SNEAKERLAB
+          </a>
 
-<h1>Carrito de la compra</h1>
+          <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navCliente">
+            <span class="navbar-toggler-icon"></span>
+          </button>
 
-<?php if (empty($carrito)): ?>
-    <p>El carrito está vacío.</p>
-<?php else: ?>
-    <table border="1" cellpadding="8">
-        <tr>
-            <th>Producto</th>
-            <th>Precio</th>
-            <th>Cantidad</th>
-            <th>Subtotal</th>
-            <th>Acciones</th>
-        </tr>
+          <div class="collapse navbar-collapse" id="navCliente">
+            <ul class="navbar-nav mx-auto gap-2 my-2 my-lg-0">
+              <li class="nav-item nav-pill"><a class="nav-link" href="catalogo.php">Catálogo</a></li>
+              <li class="nav-item nav-pill"><a class="nav-link" href="carrito.php">Carrito</a></li>
+              <li class="nav-item nav-pill"><a class="nav-link" href="mis_pedidos.php">Mis pedidos</a></li>
+              <li class="nav-item nav-pill"><a class="nav-link" href="logout.php">Cerrar sesión</a></li>
+            </ul>
 
-        <?php foreach ($productos as $producto): ?>
-            <?php
-                $cantidad = $carrito[$producto['id_producto']];
-                $subtotal = $producto['precio'] * $cantidad;
-                $total += $subtotal;
-            ?>
-            <tr>
-                <td><?php echo htmlspecialchars($producto['nombre']); ?></td>
-                <td><?php echo htmlspecialchars(number_format((float)$producto['precio'], 2)); ?> €</td>
-                <td><?php echo (int)$cantidad; ?></td>
-                <td><?php echo htmlspecialchars(number_format((float)$subtotal, 2)); ?> €</td>
-                <td>
-                    <a href="eliminar_producto_carrito.php?id=<?php echo (int)$producto['id_producto']; ?>"
-                        onclick="return confirm('¿Eliminar este producto del carrito?');">
+            <div class="d-flex align-items-center">
+              <span class="welcome-badge">
+                Bienvenido<?php echo isset($_SESSION['nombre']) ? ', ' . htmlspecialchars($_SESSION['nombre']) : ''; ?>
+              </span>
+            </div>
+          </div>
+
+        </div>
+      </nav>
+
+      <h1 class="page-title">Carrito de la compra</h1>
+
+      <?php if (empty($carrito)): ?>
+        <div class="empty-state">El carrito está vacío.</div>
+      <?php else: ?>
+
+        <section class="cart-card">
+          <div class="table-scroll">
+            <table class="table table-premium align-middle">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Precio</th>
+                  <th>Cantidad</th>
+                  <th>Subtotal</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <?php foreach ($productos as $producto): ?>
+                  <?php
+                      $cantidad = $carrito[$producto['id_producto']];
+                      $subtotal = $producto['precio'] * $cantidad;
+                      $total += $subtotal;
+                  ?>
+                  <tr>
+                    <td class="fw-bold"><?php echo htmlspecialchars($producto['nombre']); ?></td>
+                    <td><?php echo htmlspecialchars(number_format((float)$producto['precio'], 2)); ?> €</td>
+                    <td><?php echo (int)$cantidad; ?></td>
+                    <td class="fw-bold"><?php echo htmlspecialchars(number_format((float)$subtotal, 2)); ?> €</td>
+                    <td>
+                      <a class="action-link"
+                         href="eliminar_producto_carrito.php?id=<?php echo (int)$producto['id_producto']; ?>"
+                         onclick="return confirm('¿Eliminar este producto del carrito?');">
                         Eliminar
-                    </a>
-                </td>
-            </tr>
-        <?php endforeach; ?>
+                      </a>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
 
-        <tr>
-            <td colspan="3"><strong>Total</strong></td>
-            <td><strong><?php echo htmlspecialchars(number_format((float)$total, 2)); ?> €</strong></td>
-        </tr>
-    </table>
-    <form method="post" action="confirmar_compra.php">
-        <button type="submit">Confirmar compra</button>
-    </form>
-    <p>
-        <a href="vaciar_carrito.php" onclick="return confirm('¿Vaciar el carrito completo?');">
-         Vaciar carrito
-        </a>
-    </p>
+          <div class="cart-total">
+            <span>Total</span>
+            <span><?php echo htmlspecialchars(number_format((float)$total, 2)); ?> €</span>
+          </div>
+        </section>
 
-<?php endif; ?>
+        <div class="d-flex flex-column flex-md-row gap-2 mt-3">
+          <form method="post" action="confirmar_compra.php" class="flex-grow-1">
+            <button class="btn btn-brand w-100" type="submit">Confirmar compra</button>
+          </form>
 
+          <a class="btn btn-ghost w-100"
+             href="vaciar_carrito.php"
+             onclick="return confirm('¿Vaciar el carrito completo?');">
+            Vaciar carrito
+          </a>
+        </div>
+
+      <?php endif; ?>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

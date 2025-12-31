@@ -27,6 +27,16 @@ if ($id_producto === "" || $nombre === "" || $descripcion === "" || $precio === 
     exit;
 }
 
+/* Validar precio/stock */
+if (!is_numeric($precio) || (float)$precio < 0) {
+    echo "Precio inválido.";
+    exit;
+}
+if (!is_numeric($stock) || (int)$stock < 0) {
+    echo "Stock inválido.";
+    exit;
+}
+
 /* Obtener producto actual (para saber imagen actual) */
 $stmt = $pdo->prepare("SELECT imagen_url FROM producto WHERE id_producto = ?");
 $stmt->execute([$id_producto]);
@@ -40,8 +50,30 @@ if (!$actual) {
 $imagenActual = $actual["imagen_url"];
 $nuevaImagenNombre = $imagenActual;
 
-/* Si el admin sube una nueva imagen, la procesamos */
+/* Si admin sube una nueva imagen, se procesa */
 if (isset($_FILES["imagen"]) && $_FILES["imagen"]["error"] === UPLOAD_ERR_OK) {
+
+    /* Validar tamaño imagen*/
+    $maxBytes = 3 * 1024 * 1024;
+    if (!isset($_FILES["imagen"]["size"]) || (int)$_FILES["imagen"]["size"] <= 0 || (int)$_FILES["imagen"]["size"] > $maxBytes) {
+        echo "La imagen supera el tamaño permitido (3MB).";
+        exit;
+    }
+
+    /* Validar imagen*/
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = $finfo->file($_FILES["imagen"]["tmp_name"]);
+
+    $allowed = [
+        "image/jpeg" => "jpg",
+        "image/png"  => "png",
+        "image/webp" => "webp",
+    ];
+
+    if (!isset($allowed[$mime])) {
+        echo "Formato de imagen no permitido. Solo JPG, PNG o WEBP.";
+        exit;
+    }
 
     $carpetaDestino = "../assets/img/";
 
@@ -49,8 +81,14 @@ if (isset($_FILES["imagen"]) && $_FILES["imagen"]["error"] === UPLOAD_ERR_OK) {
         mkdir($carpetaDestino, 0755, true);
     }
 
-    $extension = pathinfo($_FILES["imagen"]["name"], PATHINFO_EXTENSION);
-    $nombreArchivo = uniqid("img_") . "." . $extension;
+    if (!is_writable($carpetaDestino)) {
+        echo "La carpeta de imágenes no tiene permisos de escritura.";
+        exit;
+    }
+
+    /* Nombre final del archivo */
+    $extension = $allowed[$mime];
+    $nombreArchivo = uniqid("img_", true) . "." . $extension;
 
     $rutaFinal = $carpetaDestino . $nombreArchivo;
 
@@ -60,9 +98,19 @@ if (isset($_FILES["imagen"]) && $_FILES["imagen"]["error"] === UPLOAD_ERR_OK) {
     }
 
     /* Si se guardó la nueva imagen, borramos la vieja */
-    $rutaImagenVieja = $carpetaDestino . $imagenActual;
-    if ($imagenActual && file_exists($rutaImagenVieja)) {
-        unlink($rutaImagenVieja);
+    if ($imagenActual) {
+        // Evita nombres con rutas tipo "../"
+        if (basename($imagenActual) === $imagenActual) {
+            $rutaImagenVieja = $carpetaDestino . $imagenActual;
+
+            $realDir = realpath($carpetaDestino);
+            $realFile = realpath($rutaImagenVieja);
+
+            // Solo borrar si el archivo está dentro de la carpeta destino
+            if ($realDir && $realFile && str_starts_with($realFile, $realDir) && file_exists($rutaImagenVieja)) {
+                unlink($rutaImagenVieja);
+            }
+        }
     }
 
     $nuevaImagenNombre = $nombreArchivo;

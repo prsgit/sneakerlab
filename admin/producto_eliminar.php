@@ -16,8 +16,8 @@ if (!isset($_GET['id'])) {
 
 $id_producto = $_GET['id'];
 
-/* Obtener imagen del producto */
-$sql = "SELECT imagen_url FROM producto WHERE id_producto = ?";
+/* Comprobar que el producto existe y está activo */
+$sql = "SELECT imagen_url FROM producto WHERE id_producto = ? AND activo = 1";
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$id_producto]);
 $producto = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -27,17 +27,11 @@ if (!$producto) {
     exit;
 }
 
-/* Eliminar producto de la BD */
-$sqlDelete = "DELETE FROM producto WHERE id_producto = ?";
+/* "Eliminar" producto de la BD = a desactivar para no romper el histórico ya que puede estra referenciado */
+$sqlDelete = "UPDATE producto SET activo = 0 WHERE id_producto = ?";
 $stmtDelete = $pdo->prepare($sqlDelete);
 $stmtDelete->execute([$id_producto]);
 
-/* Eliminar imagen del servidor */
-$rutaImagen = "../assets/img/" . $producto['imagen_url'];
-
-if (file_exists($rutaImagen)) {
-    unlink($rutaImagen);
-}
 
 /* Volver al listado */
 header("Location: productos.php");

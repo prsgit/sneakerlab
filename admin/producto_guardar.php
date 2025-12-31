@@ -20,9 +20,23 @@ $descripcion = $_POST["descripcion"] ?? "";
 $precio = $_POST["precio"] ?? "";
 $stock = $_POST["stock"] ?? "";
 
+/* Normalizar */
+$nombre = trim($nombre);
+$descripcion = trim($descripcion);
+
 /* Validación */
 if ($nombre === "" || $descripcion === "" || $precio === "" || $stock === "") {
     echo "Faltan datos obligatorios.";
+    exit;
+}
+
+/* Validar precio/stock (numéricos y no negativos) */
+if (!is_numeric($precio) || (float)$precio < 0) {
+    echo "Precio inválido.";
+    exit;
+}
+if (!is_numeric($stock) || (int)$stock < 0) {
+    echo "Stock inválido.";
     exit;
 }
 
@@ -32,17 +46,46 @@ if (!isset($_FILES["imagen"]) || $_FILES["imagen"]["error"] !== UPLOAD_ERR_OK) {
     exit;
 }
 
+/* Validar tamaño máximo */
+$maxBytes = 3 * 1024 * 1024;
+if (!isset($_FILES["imagen"]["size"]) || (int)$_FILES["imagen"]["size"] <= 0 || (int)$_FILES["imagen"]["size"] > $maxBytes) {
+    echo "La imagen supera el tamaño permitido (3MB).";
+    exit;
+}
+
+/* Validar tipo */
+$finfo = new finfo(FILEINFO_MIME_TYPE);
+$mime = $finfo->file($_FILES["imagen"]["tmp_name"]);
+
+$allowed = [
+    "image/jpeg" => "jpg",
+    "image/png"  => "png",
+    "image/webp" => "webp",
+];
+
+if (!isset($allowed[$mime])) {
+    echo "Formato de imagen no permitido. Solo JPG, PNG o WEBP.";
+    exit;
+}
+
 /* Preparar destino de la imagen */
 $carpetaDestino = "../assets/img/";
 
 /* Crea la carpeta si no existe */
-if (!is_dir($carpetaDestino)) {
-    mkdir($carpetaDestino, 0755, true);
+if (!is_dir($carpetaDestino) && !mkdir($carpetaDestino, 0755, true)) {
+    echo "No se pudo crear la carpeta de imágenes.";
+    exit;
 }
 
-/* Nombre final del archivo */
-$extension = pathinfo($_FILES["imagen"]["name"], PATHINFO_EXTENSION);
-$nombreArchivo = uniqid("img_") . "." . $extension;
+/* Comprobar que es escribible */
+if (!is_writable($carpetaDestino)) {
+    echo "La carpeta de imágenes no tiene permisos de escritura.";
+    exit;
+}
+
+/* Nombre final del archivo  */
+$extension = $allowed[$mime];
+$nombreArchivo = uniqid("img_", true) . "." . $extension;
 
 $rutaFinal = $carpetaDestino . $nombreArchivo;
 
@@ -56,7 +99,16 @@ if (!move_uploaded_file($_FILES["imagen"]["tmp_name"], $rutaFinal)) {
 $sql = "INSERT INTO producto (nombre, descripcion, precio, stock, imagen_url)
         VALUES (?, ?, ?, ?, ?)";
 $stmt = $pdo->prepare($sql);
-$stmt->execute([$nombre, $descripcion, $precio, $stock, $nombreArchivo]);
+
+try {
+    $stmt->execute([$nombre, $descripcion, $precio, $stock, $nombreArchivo]);
+} catch (Throwable $e) {
+    if (file_exists($rutaFinal)) {
+        unlink($rutaFinal);
+    }
+    echo "Error al guardar el producto.";
+    exit;
+}
 
 /* Volver al listado */
 header("Location: productos.php");
